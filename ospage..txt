@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_FRAMES 3
+#define MAX_PAGES 100
+
+// Check if page is in frames
+bool isPageInFrame(int page, int frames[], int frame_size) {
+    for (int i = 0; i < frame_size; i++) {
+        if (frames[i] == page) return true;
+    }
+    return false;
+}
+
+// FCFS Page Replacement
+int FCFS(int pages[], int num_pages) {
+    int frames[MAX_FRAMES] = {-1, -1, -1};
+    int page_faults = 0, next_replace = 0;
+    for (int i = 0; i < num_pages; i++) {
+        if (!isPageInFrame(pages[i], frames, MAX_FRAMES)) {
+            frames[next_replace] = pages[i];
+            next_replace = (next_replace + 1) % MAX_FRAMES;
+            page_faults++;
+        }
+    }
+    return page_faults;
+}
+
+// LRU Page Replacement
+int LRU(int pages[], int num_pages) {
+    int frames[MAX_FRAMES] = {-1, -1, -1}, page_faults = 0, time[MAX_FRAMES] = {0};
+    for (int i = 0; i < num_pages; i++) {
+        if (!isPageInFrame(pages[i], frames, MAX_FRAMES)) {
+            int lru_index = 0;
+            for (int j = 1; j < MAX_FRAMES; j++) {
+                if (time[j] < time[lru_index]) lru_index = j;
+            }
+            frames[lru_index] = pages[i];
+            time[lru_index] = i;
+            page_faults++;
+        } else {
+            for (int j = 0; j < MAX_FRAMES; j++) {
+                if (frames[j] == pages[i]) {
+                    time[j] = i;
+                    break;
+                }
+            }
+        }
+    }
+    return page_faults;
+}
+
+// Optimal Page Replacement
+int Optimal(int pages[], int num_pages) {
+    int frames[MAX_FRAMES] = {-1, -1, -1}, page_faults = 0;
+    for (int i = 0; i < num_pages; i++) {
+        if (!isPageInFrame(pages[i], frames, MAX_FRAMES)) {
+            int replace_index = -1, farthest = i;
+            for (int j = 0; j < MAX_FRAMES; j++) {
+                int k;
+                for (k = i + 1; k < num_pages; k++) {
+                    if (frames[j] == pages[k]) {
+                        if (k > farthest) { farthest = k; replace_index = j; }
+                        break;
+                    }
+                }
+                if (k == num_pages) {
+                    replace_index = j;
+                    break;
+                }
+            }
+            if (replace_index == -1) replace_index = 0;
+            frames[replace_index] = pages[i];
+            page_faults++;
+        }
+    }
+    return page_faults;
+}
+
+int main() {
+    int num_pages, pages[MAX_PAGES];
+    printf("Enter number of pages: ");
+    scanf("%d", &num_pages);
+    printf("Enter page sequence:\n");
+    for (int i = 0; i < num_pages; i++) {
+        scanf("%d", &pages[i]);
+    }
+
+    printf("\nResults (Frame Size = %d):\n", MAX_FRAMES);
+    printf("FCFS Page Faults: %d\n", FCFS(pages, num_pages));
+    printf("LRU Page Faults: %d\n", LRU(pages, num_pages));
+    printf("Optimal Page Faults: %d\n", Optimal(pages, num_pages));
+    return 0;
+}
